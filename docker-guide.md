@@ -150,6 +150,93 @@ docker run -d --name rehber-web -p 127.0.0.1:8081:80 rehber-web:1.0
 
 Build context'e eklenmesini istemediğin dosyaları `.dockerignore` ile hariç tutabilirsin. Kaynak: [Dockerfile başvurusu](https://docs.docker.com/reference/dockerfile/).
 
+### Dockerfile: İmajın Tarifi
+
+Dockerfile'ı bir yemek tarifi gibi düşünebilirsin: temel imaj başlangıç malzemelerini, diğer satırlar hazırlık adımlarını belirtir. `docker build` bu tarifi kullanarak imajı oluşturur; `docker run` ise imajdan bir konteyner başlatır.
+
+Görseldeki Python web uygulaması örneği şöyledir:
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
+```
+
+| Satır | Ne yapar? |
+|-------|-----------|
+| `FROM python:3.12-slim` | Python 3.12 içeren temel imajla başlar. `slim`, daha az sistem paketi içeren küçük bir varyanttır. |
+| `WORKDIR /app` | İmaj içindeki çalışma klasörünü `/app` yapar; klasör yoksa oluşturur. Sonraki göreli hedefler ve komutlar bu klasörü kullanır. |
+| `COPY requirements.txt .` | Build context'teki bağımlılık listesini `/app/requirements.txt` konumuna kopyalar. Buradaki `.` hedef çalışma klasörüdür. |
+| `RUN pip install -r requirements.txt` | İmaj oluşturulurken listedeki Python paketlerini kurar. `-r`, paket listesinin dosyadan okunmasını sağlar. |
+| `COPY . .` | Build context içeriğini, `.dockerignore` ile hariç tutulanlar dışında, `/app` içine kopyalar. İlk `.` kaynak, ikinci `.` hedeftir. |
+| `EXPOSE 8000` | Uygulamanın `8000` portunu kullandığını belgeler. Dışarıdan erişim için ayrıca `-p` gerekir. |
+| `CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]` | Konteyner başladığında varsayılan olarak Gunicorn web sunucusunu çalıştırır. |
+
+Son satırda `-b` dinleme adresini belirler. `0.0.0.0:8000`, konteynerin tüm ağ arayüzlerinde `8000` portunu dinlemek demektir. `app:app` içindeki ilk `app`, `app.py` dosyasını; ikincisi bu dosyadaki uygulama nesnesini ifade eder.
+
+### Örneği Çalıştırmak İçin Gerekli Dosyalar
+
+Önceki Nginx örneğinden ayrı, boş bir klasörde yukarıdaki `Dockerfile` ile birlikte şu dosyaları oluştur.
+
+`requirements.txt` — kurulacak paketler:
+
+```text
+Flask
+gunicorn
+```
+
+`app.py` — isteklere cevap veren küçük bir Flask uygulaması:
+
+```python
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.get("/")
+def merhaba():
+    return "Merhaba Docker!"
+```
+
+`.dockerignore` — imaja kopyalanması gerekmeyen dosyalar:
+
+```text
+.git
+.venv
+__pycache__
+*.pyc
+```
+
+Bu klasörde çalıştır:
+
+```bash
+docker build -t rehber-python:1.0 .
+docker run --rm --name rehber-python -p 127.0.0.1:8000:8000 rehber-python:1.0
+```
+
+`http://localhost:8000` adresinde `Merhaba Docker!` yanıtını görürsün. Komut ön planda çalışır; `Ctrl+C` ile durdurduğunda konteyner silinir.
+
+### RUN ve CMD Arasındaki Fark
+
+- **`RUN`:** İmaj hazırlanırken çalışır. Örnekte paketleri kurar; sonuç imaja dahil edilir.
+- **`CMD`:** Konteyner başlatılırken çalışacak varsayılan komutu tanımlar. İmaj oluşturulurken web sunucusunu başlatmaz.
+
+```text
+docker build → RUN ile paketleri kur → İmaj hazır
+docker run  → CMD ile uygulamayı başlat → Konteyner çalışır
+```
+
+### Neden Önce requirements.txt Kopyalanıyor?
+
+Docker, değişmeyen build adımlarının sonuçlarını **önbellekten (cache)** kullanabilir. Bağımlılık listesini önce kopyalayıp paketleri kurduğunda, yalnızca `app.py` değişirse paket kurulum adımı önbellekten kullanılabilir. `requirements.txt` değişirse kurulum ve sonraki adımlar yeniden yapılır.
+
+`RUN` ve `COPY` gibi dosya sistemini değiştiren adımlar imaj katmanları oluşturur. `CMD` ve `EXPOSE` gibi talimatlar ise yapılandırma bilgisi ekler; her Dockerfile satırı yeni bir dosya sistemi katmanı oluşturmaz.
+
+Kaynaklar: [Dockerfile talimatları](https://docs.docker.com/reference/dockerfile/), [Build önbelleğini verimli kullanma](https://docs.docker.com/build/cache/optimize/).
+
 ---
 
 ## 💾 Kalıcı Veri: Volume ve Bind Mount
