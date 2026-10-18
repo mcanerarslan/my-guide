@@ -146,6 +146,8 @@ docker build -t rehber-web:1.0 .
 docker run -d --name rehber-web -p 127.0.0.1:8081:80 rehber-web:1.0
 ```
 
+`docker build` komutundaki **`-t` (`--tag`)**, oluşturulan imaja bir ad ve isteğe bağlı bir etiket verir. `rehber-web:1.0` örneğinde imaj adı `rehber-web`, etiket `1.0` olur. Böylece imajı sonraki `docker run` komutunda bu adla kullanabilirsin. Etiket yazmazsan `latest` kullanılır; `1.0` gibi etiketleri sen belirlersin, Docker otomatik sürüm artırmaz. Sondaki `.` ise geçerli klasörün build context olduğunu belirtir.
+
 `http://localhost:8081` adresinde kendi sayfanı görebilirsin. `index.html` değiştiğinde imajı yeniden oluşturup konteyneri yeni imajdan yeniden oluşturman gerekir.
 
 Build context'e eklenmesini istemediğin dosyaları `.dockerignore` ile hariç tutabilirsin. Kaynak: [Dockerfile başvurusu](https://docs.docker.com/reference/dockerfile/).
@@ -216,6 +218,8 @@ Bu klasörde çalıştır:
 docker build -t rehber-python:1.0 .
 docker run --rm --name rehber-python -p 127.0.0.1:8000:8000 rehber-python:1.0
 ```
+
+Buradaki `-t rehber-python:1.0`, oluşturulan imaja `rehber-python` adını ve `1.0` etiketini verir. Sonraki satırda `docker run`, bu imajı kullanarak konteyneri başlatır.
 
 `http://localhost:8000` adresinde `Merhaba Docker!` yanıtını görürsün. Komut ön planda çalışır; `Ctrl+C` ile durdurduğunda konteyner silinir.
 
