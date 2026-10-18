@@ -21,6 +21,23 @@ Konteynerler ayrı bir işletim sistemi çekirdeği çalıştırmak yerine çal�
 
 Kaynak: [Docker imajları](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/).
 
+#### Nginx Nedir?
+
+**Nginx** ("engine-x" diye okunur), web sitelerini ve uygulamaları internete sunmak için kullanılan bir **web sunucusudur**. Bu rehberdeki `nginx` imajı, Nginx'i bir Docker konteynerinde çalıştırmanı sağlar.
+
+- **Dosya sunar:** HTML, CSS, JavaScript ve görselleri tarayıcıya gönderir.
+- **Reverse proxy (ters vekil) olarak çalışır:** Gelen istekleri arkada çalışan uygulamaya yönlendirir.
+- **Yük dengeler:** İstekleri birden fazla uygulama sunucusuna dağıtabilir.
+- **HTTPS bağlantısını yönetir:** TLS sertifikalarını kullanarak şifreli bağlantı sağlar.
+
+Bir uygulamanın önünde kullanıldığında istek akışı şöyle olabilir:
+
+```text
+Kullanıcı → Nginx konteyneri → Uygulama konteyneri
+```
+
+Örneğin uygulaman `3000` portunda çalışırken Nginx, uygun yapılandırmayla `https://site.com` adresine gelen istekleri bu uygulamaya iletebilir. Rehberdeki temel örneklerde ise Nginx, HTML dosyalarını doğrudan sunar.
+
 ---
 
 ## 💻 Başlangıç ve Kurulum Kontrolü
